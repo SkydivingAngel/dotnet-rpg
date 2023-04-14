@@ -16,10 +16,14 @@ namespace dotnet_rpg.CharacterService.Services
             var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
             var character = mapper.Map<Character>(newCharacter);
 
+            // Altro Modo
+            // var character = new Character();
+            // mapper.Map(newCharacter, character);
+
             context.Characters.Add(character);
 			await context.SaveChangesAsync();
 			
-            //serviceResponse.Data = mapper.Map<List<GetCharacterDto>>(characters); // 1 Modo
+            //serviceResponse.Data = mapper.Map<List<GetCharacterDto>>(await context.Characters.ToListAsync()); // 1 Modo
 			serviceResponse.Data = await context.Characters.Select(c => mapper.Map<GetCharacterDto>(c)).ToListAsync(); // 2 Modo
             return serviceResponse;
         }
@@ -29,7 +33,7 @@ namespace dotnet_rpg.CharacterService.Services
             var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
 			var dbCharacters = await context.Characters.ToListAsync();
 			
-            serviceResponse.Data = dbCharacters.Select(c => mapper.Map<GetCharacterDto>(c)).ToList(); // 2 Modo
+            serviceResponse.Data = dbCharacters.Select(c => mapper.Map<GetCharacterDto>(c)).ToList();
 
             return serviceResponse;
         }
@@ -39,7 +43,16 @@ namespace dotnet_rpg.CharacterService.Services
             var serviceResponse = new ServiceResponse<GetCharacterDto>();
 
 			var dbCharacter = await context.Characters.FirstOrDefaultAsync(c => c.Id == id);
-            serviceResponse.Data = mapper.Map<GetCharacterDto>(dbCharacter);
+
+            if(dbCharacter is null)
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = $"Character with Id '{id}' Not Found!"; 
+            }
+            else
+            {
+                serviceResponse.Data = mapper.Map<GetCharacterDto>(dbCharacter);
+            }
 
             return serviceResponse;
         }
@@ -48,40 +61,10 @@ namespace dotnet_rpg.CharacterService.Services
         {
             var serviceResponse = new ServiceResponse<GetCharacterDto>();
 
-            // var character = characters.FirstOrDefault(c => c.Id == updateCharacter.Id);
+            var dbCharacter = await context.Characters.FirstOrDefaultAsync(c => c.Id == updateCharacter.Id);
 
-            // if(character is not null)
-            // {
-            //     character.Name = updateCharacter.Name;
-            //     character.HitPoints = updateCharacter.HitPoints;
-            //     character.Strength = updateCharacter.Strength;
-            //     character.Defense = updateCharacter.Defense;
-            //     character.Intelligence = updateCharacter.Intelligence;
-            //     character.Class = updateCharacter.Class;
-
-            //     serviceResponse.Data = mapper.Map<GetCharacterDto>(character); // 1 Modo          
-            // }
-            // else
-            // {
-            //     serviceResponse.Success = false;
-            //     serviceResponse.Message = $"Character with Id '{updateCharacter.Id}' Not Found!";
-            // }
-
-            // Oppure try catch
-
-            try
+            if(dbCharacter is not null)
             {
-                //var character = characters.FirstOrDefault(c => c.Id == updateCharacter.Id);
-                var dbCharacter = await context.Characters.FirstOrDefaultAsync(c => c.Id == updateCharacter.Id);
-				
-				
-                if(dbCharacter is null)
-                    throw new Exception($"Character with Id '{updateCharacter.Id}' Not Found!");
-
-                //mapper.Map(updateCharacter, dbCharacter);
-
-                // Oppure
-
                 dbCharacter.Name = updateCharacter.Name;
                 dbCharacter.HitPoints = updateCharacter.HitPoints;
                 dbCharacter.Strength = updateCharacter.Strength;
@@ -89,15 +72,46 @@ namespace dotnet_rpg.CharacterService.Services
                 dbCharacter.Intelligence = updateCharacter.Intelligence;
                 dbCharacter.Class = updateCharacter.Class;
 
-				await context.SaveChangesAsync();
-				
-                serviceResponse.Data = mapper.Map<GetCharacterDto>(dbCharacter); 
+                await context.SaveChangesAsync();
+
+                serviceResponse.Data = mapper.Map<GetCharacterDto>(dbCharacter);          
             }
-            catch (Exception ex)
+            else
             {
                 serviceResponse.Success = false;
-                serviceResponse.Message = ex.Message;
+                serviceResponse.Message = $"Character with Id '{updateCharacter.Id}' Not Found!";
             }
+
+            // Oppure try catch
+
+            // try
+            // {
+            //     var dbCharacter = await context.Characters.FirstOrDefaultAsync(c => c.Id == updateCharacter.Id);
+				
+				
+            //     if(dbCharacter is null)
+            //         throw new Exception($"Character with Id '{updateCharacter.Id}' Not Found!");
+
+            //     //mapper.Map(updateCharacter, dbCharacter);
+
+            //     // Oppure
+
+            //     dbCharacter.Name = updateCharacter.Name;
+            //     dbCharacter.HitPoints = updateCharacter.HitPoints;
+            //     dbCharacter.Strength = updateCharacter.Strength;
+            //     dbCharacter.Defense = updateCharacter.Defense;
+            //     dbCharacter.Intelligence = updateCharacter.Intelligence;
+            //     dbCharacter.Class = updateCharacter.Class;
+
+			// 	   await context.SaveChangesAsync();
+				
+            //     serviceResponse.Data = mapper.Map<GetCharacterDto>(dbCharacter); 
+            // }
+            // catch (Exception ex)
+            // {
+            //     serviceResponse.Success = false;
+            //     serviceResponse.Message = ex.Message;
+            // }
 
             return serviceResponse;
         }
