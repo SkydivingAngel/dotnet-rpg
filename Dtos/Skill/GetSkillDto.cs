@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace dotnet_rpg.Models
+namespace dotnet_rpg.Dtos.Skill
 {
-    public class Skill
+    public class GetSkillDto
     {
-        public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int Damage { get; set; }
-        public List<Character>? Characters { get; set; }
     }
 }
